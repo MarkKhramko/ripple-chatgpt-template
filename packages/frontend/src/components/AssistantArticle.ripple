@@ -2,7 +2,7 @@ import Markdown from '#components/Markdown.ripple';
 
 
 export default component AssistantArticle({ content }) {
-	<div class='assistant-article'>
+	<div class='pl-[12px] sm:pl-0'>
 		<Markdown rawContent={content} />
 	</div>
 }

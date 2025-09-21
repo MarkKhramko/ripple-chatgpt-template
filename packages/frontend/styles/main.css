@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+@theme {
+	--breakpoint-xs: 30rem;
+}
+
 /* Scrollbar: */
 /* For browsers supporting WebKit scrollbar styling (Chrome, Edge, Safari) */
 ::-webkit-scrollbar {
