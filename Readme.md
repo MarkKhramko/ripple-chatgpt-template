@@ -58,5 +58,5 @@
 [MIT](LICENSE)
 
 ## Copyright
-Copyright (c) 2025 [Dominic Gannawa](https://github.com/trueadm) - [Ripple framework](https://github.com/trueadm/ripple) 
-Copyright (c) 2025 [Mark Khramko](https://github.com/MarkKhramko) - Application code
+- Copyright (c) 2025 [Dominic Gannawa](https://github.com/trueadm) — [Ripple framework](https://github.com/trueadm/ripple) 
+- Copyright (c) 2025 [Mark Khramko](https://github.com/MarkKhramko) — Application code
