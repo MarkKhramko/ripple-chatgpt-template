@@ -1,0 +1,15 @@
+import { track } from 'ripple';
+
+export default function useRef() {
+	let node: HTMLElement = track();
+
+	const ref = (jsxNode: HTMLElement) => {
+		@node = jsxNode;
+
+		return () => {
+			@node = undefined;
+		};
+	};
+
+	return [node, ref];
+}

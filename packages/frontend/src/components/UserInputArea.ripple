@@ -1,0 +1,115 @@
+import { effect, track } from 'ripple';
+
+import onElementResize from '#hooks/onElementResize.ripple';
+import useRef from '#hooks/useRef.ripple';
+
+import ArrowUpIcon from '#icons/arrow-up.ripple';
+import PaperClipIcon from '#icons/paper-clip.ripple';
+
+type ComponentProps = {
+	inputRef;
+	onInput: () => void;
+	onValueSubmit: (value: string) => void;
+	containerClass: string;
+	formClass: string
+};
+
+export default component UserInputArea({ inputRef, onInput, onValueSubmit, containerClass, formClass }: ComponentProps) {
+	const TEXTAREA_MAX_HEIGHT = 160;
+
+	let textareaNode: HTMLElement = track();
+	let textareaDefaultHeight = track();
+	let textareaCurrentHeight = track();
+	const textareaRef = (node: HTMLElement) => {
+		if (inputRef) inputRef(node);
+
+		@textareaNode = node;
+		@textareaDefaultHeight = node.scrollHeight;
+
+		return () => {
+			@textareaNode = undefined;
+		};
+	};
+
+	onElementResize(@textareaNode, () => {
+		@textareaCurrentHeight = @textareaNode.scrollHeight;
+	});
+
+	const [ formNode, formRef ] = useRef();
+
+	let isHoldingShift = track(false);
+
+	const _handleSubmit = e => {
+		if (e) e.preventDefault();
+		const value = @textareaNode.value;
+		onValueSubmit(value);
+
+		@textareaNode.value = '';
+
+		@textareaNode.style.height = 'auto';
+		@textareaCurrentHeight = @textareaDefaultHeight;
+		@textareaNode.style.height = `${@textareaCurrentHeight}px`;
+	};
+
+	effect(() => {
+		const _handleKeyDown = e => {
+			if (e.key === 'Enter') {
+				if (!@isHoldingShift) {
+					e.preventDefault();
+					if (@formNode) {
+						_handleSubmit();
+					}
+				}
+			}
+
+			if (e.key === 'Shift') {
+				@isHoldingShift = true;
+			}
+		};
+
+		const _handleKeyUp = e => {
+			if (e.key === 'Shift') {
+				@isHoldingShift = false;
+			}
+		};
+
+		@textareaNode.addEventListener('keydown', _handleKeyDown);
+		@textareaNode.addEventListener('keyup', _handleKeyUp);
+
+		return () => {
+			@textareaNode.removeEventListener('keydown', _handleKeyDown);
+			@textareaNode.removeEventListener('keyup', _handleKeyUp);
+		};
+	});
+
+	const _handleInput = e => {
+		if (onInput) onInput(e);
+
+		@textareaNode.style.height = 'auto';
+
+		@textareaCurrentHeight = @textareaNode.scrollHeight;
+		if (@textareaCurrentHeight > TEXTAREA_MAX_HEIGHT) {
+			@textareaCurrentHeight = TEXTAREA_MAX_HEIGHT;
+		}
+
+		@textareaNode.style.height = `${@textareaCurrentHeight}px`;
+	};
+
+	<div class={`isolate w-full flex ${containerClass ?? ''}`}><div class='mx-auto'>
+		<form
+			{ref formRef}
+			onSubmit={_handleSubmit}
+			class={formClass}
+			style={`margin-top: ${-1 * (@textareaCurrentHeight - @textareaDefaultHeight)}px`}
+		>
+			<label for='chat' class='sr-only'>{'Your message'}</label>
+			<div class='flex items-center py-2 px-4 bg-gray-50 rounded-full shadow-lg'>
+				<button type='button' class='inline-flex justify-center p-2 text-gray-500 rounded-full cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600 focus:outline-2 focus:outline-offset-2 focus:outline-black'><PaperClipIcon /></button>
+				<textarea {ref textareaRef} id='chat' rows={1} class='block mx-2 p-2.5 w-full h-auto text-sm resize-none text-gray-900 bg-white rounded-lg border border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white focus:outline-none' style={`max-height: ${TEXTAREA_MAX_HEIGHT}px`} placeholder='Ask anything' onInput={_handleInput} />
+				<button type='submit' class='inline-flex justify-center p-2 rounded-full cursor-pointer text-white bg-black focus:outline-2 focus:outline-offset-2 focus:outline-black'><ArrowUpIcon strokeWidth={ 2 } /></button>
+			</div>
+		</form>
+
+		<div class='text-token-text-secondary relative mt-auto flex min-h-8 w-full items-center justify-center p-2 text-center text-xs md:px-[60px]'><div>{'GPT can make mistakes. Check important info.'}</div></div>
+	</div></div>
+}

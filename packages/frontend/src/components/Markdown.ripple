@@ -1,0 +1,9 @@
+import { track } from 'ripple';
+
+type MarkdownComponentProps = { rawContent: string };
+
+export default component Markdown({ rawContent }MarkdownComponentProps) {
+	let content = track(rawContent);
+
+	<article>{content}</article>
+}

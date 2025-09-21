@@ -1,0 +1,24 @@
+{
+	"name": "ripple-chatgpt-template-monorepo",
+	"version": "0.0.1",
+	"author": "Mark Khramko @MarkKhramko",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/MarkKhramko/ripple-chatgpt-template.git"
+	},
+	"homepage": "https://github.com/MarkKhramko/ripple-chatgpt-template#readme",
+	"bugs": {
+		"url": "https://github.com/MarkKhramko/ripple-chatgpt-template/issues"
+	},
+	"scripts": {
+		"dev": "concurrently \"npm run dev --prefix packages/backend\" \"npm run dev --prefix packages/frontend\"",
+		"postinstall": "npm install --prefix packages/backend && npm install --prefix packages/frontend"
+	},
+	"engines": {
+		"node": ">=22.0.0"
+	},
+	"devDependencies": {
+		"concurrently": "^9.2.1"
+	}
+}

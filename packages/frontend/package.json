@@ -1,0 +1,32 @@
+{
+	"name": "ripple-gpt-frontend",
+	"version": "0.0.1",
+	"author": "Mark Khramko @MarkKhramko",
+	"license": "MIT",
+	"type": "module",
+	"scripts": {
+		"start": "vite",
+		"dev": "vite",
+		"build": "vite build",
+		"serve": "vite preview",
+		"format:check": "prettier --check ."
+	},
+	"devDependencies": {
+		"@tailwindcss/vite": "^4.1.13",
+		"prettier": "^3.6.2",
+		"prettier-plugin-ripple": "^0.2.56",
+		"tailwindcss": "^4.1.13",
+		"typescript": "^5.9.2",
+		"vite": "^7.1.4",
+		"vite-plugin-ripple": "^0.2.56"
+	},
+	"dependencies": {
+		"ripple": "^0.2.56"
+	},
+	"engines": {
+		"node": ">=22.0.0"
+	},
+	"volta": {
+		"node": "22.19.0"
+	}
+}

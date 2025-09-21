@@ -1,0 +1,1 @@
+export default ['packages/ripple-gpt-frontend'];

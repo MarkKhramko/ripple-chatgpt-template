@@ -1,0 +1,8 @@
+import Chat from './Chat.ripple';
+
+export component App() {
+	<div>
+		<h1 class='text-center'>{'Welcome to RippleGPT!'}</h1>
+		<Chat />
+	</div>
+}

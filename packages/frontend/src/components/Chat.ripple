@@ -1,0 +1,104 @@
+import { sendMessages } from '#api/chat.ts';
+
+import { track, TrackedArray } from 'ripple';
+
+import useRef from '#hooks/useRef.ripple';
+
+import AssistantArticle from './AssistantArticle.ripple';
+import UserInputArea from './UserInputArea.ripple';
+
+export default component Chat() {
+	let conversationId = track(null);
+	let assistantMessage = track(null);
+	let isLoadingResponse = track(false);
+
+	const messages = new TrackedArray();
+	const _pushNewMessage = (role, content) => {
+		const message = {
+			role,
+			content: track(content),
+		};
+		const index = messages.push(message) - 1;
+
+		return [message, index];
+	};
+
+	const _handleFormValueSubmit = inputValue => {
+		@isLoadingResponse = true;
+
+		messages.push({
+			role: 'user',
+			content: inputValue,
+		});
+
+		const streamEventsEmitter = sendMessages({ messages });
+
+		streamEventsEmitter.on('error', error => {
+			console.error('Error:', error);
+			_pushNewMessage('assistant', 'Error: ' + error.message);
+		});
+
+		streamEventsEmitter.on('start_data_stream', () => {
+			@isLoadingResponse = false;
+			const [ message ] = _pushNewMessage('assistant', '');
+			@assistantMessage = message;
+		});
+
+		streamEventsEmitter.on('conversation_id', conversation_id => {
+			console.log('conversation_id', conversation_id);
+			@conversationId = conversation_id;
+		});
+
+		streamEventsEmitter.on('message_delta', (messageDelta: string) => {
+			if (@assistantMessage) {
+				@assistantMessage.@content += messageDelta;
+			} else {
+				console.warn('Check your code: no assistantMessage to update');
+			}
+		});
+
+		streamEventsEmitter.on('done', ({ full_message }) => {
+			const index = messages.indexOf(@assistantMessage);
+			const message = {
+				role: 'assistant',
+				content: full_message,
+			};
+			messages.splice(index, 1, message);
+		});
+	};
+
+	<div class='w-full h-full flex flex-col'>
+		<div class='w-full chat-container scrollbar-gutter-stable'>
+			<div class='flex mx-auto max-w-[40rem] flex-col gap-6 grow'>for (const message of messages) {
+				if (message.role === 'user') {
+					<div class='bubble user'>{message.content}</div>
+				}
+
+				if (message.role === 'assistant') {
+					<AssistantArticle content={message.@content ?? message.content} />
+				}
+			}
+			</div>
+		</div>
+
+		<UserInputArea
+			onValueSubmit={_handleFormValueSubmit}
+			formClass='w-[40rem]'
+		/>
+	</div>
+
+	<style>
+	  .chat-container {
+			height: calc(100vh - 120px);
+			overflow-y: scroll;
+		}
+		  .bubble.user {
+			background: #f7f7f7;
+			padding: 12px 20px;
+			border-radius: 18px 18px 0 18px;
+			max-width: 70%;
+			align-self: flex-end;
+			font-size: 1em;
+		}
+	</style>
+}
