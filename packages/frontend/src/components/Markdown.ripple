@@ -1,9 +1,135 @@
-import { track } from 'ripple';
+import { effect, track } from 'ripple';
 
-type MarkdownComponentProps = { rawContent: string };
+type LineParsingResultType = {
+	type: 'bold' | 'italic' | 'text';
+	content: string;
+}
 
-export default component Markdown({ rawContent }MarkdownComponentProps) {
-	let content = track(rawContent);
+function parseInline(text: string): Array<LineParsingResultType> {
+	const result: LineParsingResultType[] = [];
 
-	<article>{content}</article>
+	const regex = /\\([*_])|(\*\*|__)(.*?)\2|(\*|_)(.*?)\4/g;
+
+	let lastIdx = 0;
+	let match;
+	while ((match = regex.exec(text)) !== null) {
+		if (match.index > lastIdx) {
+			result.push({ type: 'text', content: text.slice(lastIdx, match.index) });
+		}
+		if (match[1]) {
+			result.push({ type: 'text', content: match[1] });
+		} else if (match[2]) {
+			result.push({ type: 'bold', content: match[3] });
+		} else if (match[4]) {
+			result.push({ type: 'italic', content: match[5] });
+		}
+		lastIdx = regex.lastIndex;
+	}
+
+	if (lastIdx < text.length) {
+		result.push({ type: 'text', content: text.slice(lastIdx) });
+	}
+
+	return result;
+}
+
+component Fragment({
+	frag
+}: { frag: LineParsingResultType }) {
+	if (frag.type === 'bold') {
+		<strong>{frag.content}</strong>
+	}
+	else if (frag.type === 'italic') {
+		<em>{frag.content}</em>
+	}
+	else {
+		<span>{frag.content}</span>
+	}
+}
+
+type MarkdownComponentProps = {
+	rawContent: string;
+};
+
+export default component Markdown({
+	rawContent
+}: MarkdownComponentProps) {
+	let lines = track([])
+
+	effect(() => {
+		@lines = rawContent.split('\n');
+	});
+
+	<article class="mardown">
+		for (let line of @lines) {
+			if (line === '') {
+				<br/>
+				continue;
+			}
+
+			let headerMatch = line.match(/^(#{1,6})\s+(.*)$/);
+			if (headerMatch) {
+				let level = headerMatch[1].length;
+				let content = headerMatch[2];
+				let parsed = parseInline(content);
+
+				if (level === 1) {
+					<h1>
+						for (let frag of parsed) {
+							<Fragment frag={ frag } />
+						}
+					</h1>
+				}
+				else if (level === 2) {
+					<h2>
+						for (let frag of parsed) {
+							<Fragment frag={ frag } />
+						}
+					</h2>
+				}
+				else if (level === 3) {
+					<h3>
+						for (let frag of parsed) {
+							<Fragment frag={ frag } />
+						}
+					</h3>
+				}
+				else if (level === 4) {
+					<h4>
+						for (let frag of parsed) {
+							<Fragment frag={ frag } />
+						}
+					</h4>
+				}
+				else if (level === 5) {
+					<h5>
+						for (let frag of parsed) {
+							<Fragment frag={ frag } />
+						}
+					</h5>
+				}
+				else if (level === 6) {
+					<h6>
+						for (let frag of parsed) {
+							<Fragment frag={ frag } />
+						}
+					</h6>
+				}
+				continue;
+			}
+
+			let parsed = parseInline(line)
+			<p>
+				for (let frag of parsed) {
+					<Fragment frag={ frag } />
+				}
+			</p>
+		}
+	</article>
+
+	<style>
+		.mardown > h1, h2, h3, h4, h5, h6 {
+			font-weight: bold;
+		}
+	</style>
 }

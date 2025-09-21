@@ -1,3 +1,8 @@
+import Markdown from '#components/Markdown.ripple';
+
+
 export default component AssistantArticle({ content }) {
-	<article class='assistant-article'>{content}</article>
+	<div class='assistant-article'>
+		<Markdown rawContent={content} />
+	</div>
 }
