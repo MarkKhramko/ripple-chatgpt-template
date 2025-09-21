@@ -21,7 +21,7 @@
 		"vite-plugin-ripple": "^0.2.56"
 	},
 	"dependencies": {
-		"ripple": "^0.2.56"
+		"ripple": "^0.2.59"
 	},
 	"engines": {
 		"node": ">=22.0.0"
