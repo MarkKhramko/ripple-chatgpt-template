@@ -94,7 +94,7 @@ export default component Markdown({
 	 * Ripple does not implement `continue` & `break`,
 	 * so we must rely on if-else
 	 */
-	<article class="mardown">
+	<article class="markdown">
 		let linesSkip = 0;
 
 		for (let line of @lines) {
@@ -102,7 +102,6 @@ export default component Markdown({
 				linesSkip--;
 				<span/>
 			} else {
-
 				// Matchers:
 				let codeBlockMatch = line.match(CODE_REGEX);
 				let headerMatch = line.match(HEADER_REGEX);
@@ -111,24 +110,21 @@ export default component Markdown({
 				if (codeBlockMatch) {
 					let codeBlockLang = codeBlockMatch[1] ?? '';
 					let lineIndex = @lines.indexOf(line);
-					let restOfLines = @lines.slice(lineIndex+1);
+					const restOfLines = @lines.slice(lineIndex+1);
+
 					let codeBlockEndIndex = restOfLines.indexOf('```');
-					restOfLines = restOfLines.slice(0, codeBlockEndIndex + 1);
+					codeBlockEndIndex = codeBlockEndIndex < 0 ? restOfLines.length : codeBlockEndIndex;
+					const codeLines = restOfLines.slice(0, codeBlockEndIndex);
 					let codeLineIndex = lineIndex;
+
+					// During next iteration, skip all code lines plus the closing ```
+					linesSkip = codeBlockEndIndex + 1;
 
 					<pre class="markdown-code">
 						<div class="mb-4 text-xs font-mono">{ codeBlockLang }</div>
 						<code data-lang={codeBlockLang}>
-							for (let codeLine of restOfLines) {
-								codeLineIndex++;
-								if (codeLine.match(CODE_REGEX)) {
-									const linesDif = codeLineIndex - lineIndex;
-									linesSkip = linesDif;
-									<span/>
-								}
-								else {
-									<span>{codeLine + '\n'}</span>
-								}
+							for (let codeLine of codeLines) {
+								<span>{codeLine + '\n'}</span>
 							}
 						</code>
 					</pre>
@@ -199,7 +195,7 @@ export default component Markdown({
 	</article>
 
 	<style>
-		.mardown > h1, h2, h3, h4, h5, h6 {
+		.markdown > h1, h2, h3, h4, h5, h6 {
 			font-weight: bold;
 		}
 		.markdown-code {
