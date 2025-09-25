@@ -2,7 +2,7 @@ import Chat from './Chat.ripple';
 
 export component App() {
 	<div>
-		<h1 class='text-center'>{'Welcome to RippleGPT!'}</h1>
+		<h1 class='p-2 text-center'>{'Welcome to RippleGPT!'}</h1>
 		<Chat />
 	</div>
 }
