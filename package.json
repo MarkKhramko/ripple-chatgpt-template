@@ -12,6 +12,7 @@
 		"url": "https://github.com/MarkKhramko/ripple-chatgpt-template/issues"
 	},
 	"scripts": {
+		"build": "npm run build --prefix packages/frontend",
 		"dev": "concurrently \"npm run dev --prefix packages/backend\" \"npm run dev --prefix packages/frontend\"",
 		"postinstall": "npm install --prefix packages/backend && npm install --prefix packages/frontend"
 	},
