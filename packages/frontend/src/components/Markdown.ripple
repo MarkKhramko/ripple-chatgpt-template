@@ -1,18 +1,28 @@
 import { effect, track } from 'ripple';
 
+const CODE_REGEX = /^```(\w*)/;
+const HEADER_REGEX = /^(#{1,6})\s+(.*)$/;
+
 type LineParsingResultType = {
-	type: 'bold' | 'italic' | 'text';
+	type: 'bold' | 'italic' | 'inline_code' | 'text' | 'link';
 	content: string;
+	href?: string;
 }
 
 function parseInline(text: string): Array<LineParsingResultType> {
 	const result: LineParsingResultType[] = [];
 
-	const regex = /\\([*_])|(\*\*|__)(.*?)\2|(\*|_)(.*?)\4/g;
+	const ESCAPE_REGEX = /\\([*_`])/g;
+	const BOLD_REGEX = /(\*\*|__)(.*?)\1/g;
+	const ITALIC_REGEX = /(\*|_)(.*?)\1/g;
+	const INLINE_CODE_REGEX = /`([^`]+)`/g;
+	const LINK_REGEX = /\[([^\]]+)\]\(([^)]+)\)/g;
+
+	const COMBINED_REGEX = /\\([*_])|(\*\*|__)(.*?)\2|(\*|_)(.*?)\4|`([^`]+)`|\[([^\]]+)\]\(([^)]+)\)/g;
 
 	let lastIdx = 0;
 	let match;
-	while ((match = regex.exec(text)) !== null) {
+	while ((match = COMBINED_REGEX.exec(text)) !== null) {
 		if (match.index > lastIdx) {
 			result.push({ type: 'text', content: text.slice(lastIdx, match.index) });
 		}
@@ -22,8 +32,12 @@ function parseInline(text: string): Array<LineParsingResultType> {
 			result.push({ type: 'bold', content: match[3] });
 		} else if (match[4]) {
 			result.push({ type: 'italic', content: match[5] });
+		} else if (match[6]) {
+			result.push({ type: 'inline_code', content: match[6] });
+		} else if (match[7] && match[8]) {
+			result.push({ type: 'link', content: match[7], href: match[8] });
 		}
-		lastIdx = regex.lastIndex;
+		lastIdx = COMBINED_REGEX.lastIndex;
 	}
 
 	if (lastIdx < text.length) {
@@ -42,9 +56,25 @@ component Fragment({
 	else if (frag.type === 'italic') {
 		<em>{frag.content}</em>
 	}
+	else if (frag.type === 'inline_code') {
+		<code class="inline-code">{frag.content}</code>
+	}
+	else if (frag.type === 'link') {
+		<a href={frag.href} target="_blank" rel="noopener noreferrer" class="text-blue-500 underline">{frag.content}</a>
+	}
 	else {
 		<span>{frag.content}</span>
 	}
+
+	<style>
+		.inline-code {
+			background: #ececec;
+			border-radius: 4px;
+			padding: 2px 4px;
+			font-family: 'Fira Mono', 'Menlo', 'Consolas', monospace;
+			font-size: 0.95em;
+		}
+	</style>
 }
 
 type MarkdownComponentProps = {
@@ -60,76 +90,125 @@ export default component Markdown({
 		@lines = rawContent.split('\n');
 	});
 
+	/*
+	 * Ripple does not implement `continue` & `break`,
+	 * so we must rely on if-else
+	 */
 	<article class="mardown">
+		let linesSkip = 0;
+
 		for (let line of @lines) {
-			if (line === '') {
-				<br/>
-				continue;
+			if (linesSkip > 0) {
+				linesSkip--;
+				<span/>
+			} else {
+
+				// Matchers:
+				let codeBlockMatch = line.match(CODE_REGEX);
+				let headerMatch = line.match(HEADER_REGEX);
+
+				let numberOfCodeLines = 0;
+				if (codeBlockMatch) {
+					let codeBlockLang = codeBlockMatch[1] ?? '';
+					let lineIndex = @lines.indexOf(line);
+					let restOfLines = @lines.slice(lineIndex+1);
+					let codeBlockEndIndex = restOfLines.indexOf('```');
+					restOfLines = restOfLines.slice(0, codeBlockEndIndex + 1);
+					let codeLineIndex = lineIndex;
+
+					<pre class="markdown-code">
+						<div class="mb-4 text-xs font-mono">{ codeBlockLang }</div>
+						<code data-lang={codeBlockLang}>
+							for (let codeLine of restOfLines) {
+								codeLineIndex++;
+								if (codeLine.match(CODE_REGEX)) {
+									const linesDif = codeLineIndex - lineIndex;
+									linesSkip = linesDif;
+									<span/>
+								}
+								else {
+									<span>{codeLine + '\n'}</span>
+								}
+							}
+						</code>
+					</pre>
+				}
+				else if (headerMatch) {
+					let level = headerMatch[1].length;
+					let content = headerMatch[2];
+					let parsed = parseInline(content);
+
+					if (level === 1) {
+						<h1>
+							for (let frag of parsed) {
+								<Fragment frag={ frag } />
+							}
+						</h1>
+					}
+					else if (level === 2) {
+						<h2>
+							for (let frag of parsed) {
+								<Fragment frag={ frag } />
+							}
+						</h2>
+					}
+					else if (level === 3) {
+						<h3>
+							for (let frag of parsed) {
+								<Fragment frag={ frag } />
+							}
+						</h3>
+					}
+					else if (level === 4) {
+						<h4>
+							for (let frag of parsed) {
+								<Fragment frag={ frag } />
+							}
+						</h4>
+					}
+					else if (level === 5) {
+						<h5>
+							for (let frag of parsed) {
+								<Fragment frag={ frag } />
+							}
+						</h5>
+					}
+					else if (level === 6) {
+						<h6>
+							for (let frag of parsed) {
+								<Fragment frag={ frag } />
+							}
+						</h6>
+					}
+				}
+				else {
+					if (line === '') {
+						<br/>
+					}
+					else {
+						let parsed = parseInline(line);
+						<p>
+							for (let frag of parsed) {
+								<Fragment frag={ frag } />
+							}
+						</p>
+					}
+				}
 			}
-
-			let headerMatch = line.match(/^(#{1,6})\s+(.*)$/);
-			if (headerMatch) {
-				let level = headerMatch[1].length;
-				let content = headerMatch[2];
-				let parsed = parseInline(content);
-
-				if (level === 1) {
-					<h1>
-						for (let frag of parsed) {
-							<Fragment frag={ frag } />
-						}
-					</h1>
-				}
-				else if (level === 2) {
-					<h2>
-						for (let frag of parsed) {
-							<Fragment frag={ frag } />
-						}
-					</h2>
-				}
-				else if (level === 3) {
-					<h3>
-						for (let frag of parsed) {
-							<Fragment frag={ frag } />
-						}
-					</h3>
-				}
-				else if (level === 4) {
-					<h4>
-						for (let frag of parsed) {
-							<Fragment frag={ frag } />
-						}
-					</h4>
-				}
-				else if (level === 5) {
-					<h5>
-						for (let frag of parsed) {
-							<Fragment frag={ frag } />
-						}
-					</h5>
-				}
-				else if (level === 6) {
-					<h6>
-						for (let frag of parsed) {
-							<Fragment frag={ frag } />
-						}
-					</h6>
-				}
-				continue;
-			}
-
-			let parsed = parseInline(line)
-			<p>
-				for (let frag of parsed) {
-					<Fragment frag={ frag } />
-				}
-			</p>
 		}
 	</article>
 
 	<style>
 		.mardown > h1, h2, h3, h4, h5, h6 {
 			font-weight: bold;
+		}
+		.markdown-code {
+			background: #f6f8fa;
+			border-radius: 6px;
+			padding: 12px;
+			font-size: 0.95em;
+			overflow-x: auto;
+			margin: 1em 0;
 		}
 	</style>
 }
