@@ -1,6 +1,9 @@
 node_modules/
 *.env
 
+# Build
+dist/
+
 # MacOS
 .DS_Store
 Thumbs.db
